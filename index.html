@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GuardianAI | Enterprise Fraud Detection & Analytics Dashboard</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- CSS stylesheet -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="dark-theme">
+    <div class="app-container">
+        <!-- Top Navigation -->
+        <header class="app-header">
+            <div class="logo-area">
+                <div class="logo-icon">
+                    <i class="lucide-shield-alert glow-icon"></i>
+                </div>
+                <div class="logo-text">
+                    <h1>Guardian<span>AI</span></h1>
+                    <span class="sub-logo">Hybrid ML Fraud Detection</span>
+                </div>
+            </div>
+            <div class="system-status">
+                <div class="status-item">
+                    <span class="status-dot green"></span>
+                    <span class="status-label">ML Model: <strong id="model-status">Active (RandomForest)</strong></span>
+                </div>
+                <div class="status-item">
+                    <span class="status-dot" id="sim-status-dot"></span>
+                    <span class="status-label">Simulator: <strong id="sim-status-text">Inactive</strong></span>
+                </div>
+                <button id="btn-retrain" class="action-btn header-btn text-gradient">
+                    <i class="lucide-refresh-cw font-icon"></i> Retrain Model
+                </button>
+            </div>
+        </header>
+
+        <!-- Metrics Overview Grid -->
+        <section class="metrics-grid">
+            <div class="metric-card glassmorphic">
+                <div class="metric-header">
+                    <span>TOTAL PROCESS VOLUME</span>
+                    <i class="lucide-dollar-sign metric-icon text-blue"></i>
+                </div>
+                <div class="metric-value" id="val-processed-volume">$0.00</div>
+                <div class="metric-footer">
+                    <span class="text-muted">Total processed this session</span>
+                    <span class="count-badge" id="val-processed-count">0 txs</span>
+                </div>
+            </div>
+
+            <div class="metric-card glassmorphic">
+                <div class="metric-header">
+                    <span>FINANCIAL SAVINGS</span>
+                    <i class="lucide-shield-check metric-icon text-green"></i>
+                </div>
+                <div class="metric-value text-green" id="val-savings">$0.00</div>
+                <div class="metric-footer">
+                    <span class="text-green-light"><i class="lucide-trending-up mini-icon"></i> Fraud Blocked</span>
+                    <span class="count-badge green-badge" id="val-blocked-count">0 txs</span>
+                </div>
+            </div>
+
+            <div class="metric-card glassmorphic">
+                <div class="metric-header">
+                    <span>MODEL ACCURACY & F1</span>
+                    <i class="lucide-activity metric-icon text-purple"></i>
+                </div>
+                <div class="metric-value" id="val-accuracy">100.0%</div>
+                <div class="metric-footer">
+                    <span class="text-muted">F1 Score: <span id="val-f1">0.0%</span></span>
+                    <span class="rate-badge purple-badge" id="val-alert-rate">0.0% alert rate</span>
+                </div>
+            </div>
+
+            <div class="metric-card glassmorphic">
+                <div class="metric-header">
+                    <span>PRECISION / RECALL</span>
+                    <i class="lucide-bar-chart-3 metric-icon text-yellow"></i>
+                </div>
+                <div class="metric-flex-values">
+                    <div>
+                        <span class="flex-sub-label">PRECISION</span>
+                        <span class="flex-sub-val text-yellow" id="val-precision">0.0%</span>
+                    </div>
+                    <div class="divider-v"></div>
+                    <div>
+                        <span class="flex-sub-label">RECALL</span>
+                        <span class="flex-sub-val text-purple-light" id="val-recall">0.0%</span>
+                    </div>
+                </div>
+                <div class="metric-footer">
+                    <span class="text-muted">TPR vs FPR dashboard</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Dashboard Workspace -->
+        <main class="dashboard-workspace">
+            <!-- Left Panel: Simulator Controls & Checkout Mockup -->
+            <div class="workspace-column left-panel">
+                <!-- Sandbox Simulator Controller -->
+                <div class="control-card glassmorphic">
+                    <h3 class="panel-title"><i class="lucide-sliders"></i> Real-time Simulator Controls</h3>
+                    <div class="control-group">
+                        <div class="toggle-row">
+                            <label for="toggle-auto-sim">Auto-generate Transactions</label>
+                            <label class="switch">
+                                <input type="checkbox" id="toggle-auto-sim">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                        
+                        <div class="slider-row">
+                            <div class="slider-header">
+                                <span>Simulation Speed</span>
+                                <span id="label-speed">1.5s</span>
+                            </div>
+                            <input type="range" id="input-speed" min="500" max="5000" step="250" value="1500">
+                        </div>
+
+                        <div class="slider-row">
+                            <div class="slider-header">
+                                <span>Simulated Fraud Probability</span>
+                                <span id="label-fraud-rate">8%</span>
+                            </div>
+                            <input type="range" id="input-fraud-rate" min="0" max="50" step="1" value="8">
+                        </div>
+                    </div>
+                    <div class="simulator-actions">
+                        <button id="btn-trigger-normal" class="btn secondary-btn"><i class="lucide-plus"></i> Normal Tx</button>
+                        <button id="btn-trigger-fraud" class="btn danger-btn"><i class="lucide-zap"></i> Force Fraud Tx</button>
+                    </div>
+                </div>
+
+                <!-- Checkout Terminal Form -->
+                <div class="control-card glassmorphic">
+                    <h3 class="panel-title"><i class="lucide-credit-card"></i> Payment Checkout Simulator</h3>
+                    <form id="checkout-form">
+                        <div class="form-grid">
+                            <div class="form-group col-full">
+                                <label>Cardholder Name</label>
+                                <input type="text" id="form-name" value="Alex Mercer" required>
+                            </div>
+                            <div class="form-group col-half">
+                                <label>Card Network</label>
+                                <select id="form-card-network">
+                                    <option value="Visa">Visa</option>
+                                    <option value="Mastercard">Mastercard</option>
+                                    <option value="Amex">American Express</option>
+                                    <option value="Discover">Discover</option>
+                                </select>
+                            </div>
+                            <div class="form-group col-half">
+                                <label>Age</label>
+                                <input type="number" id="form-age" min="18" max="100" value="32" required>
+                            </div>
+                            <div class="form-group col-half">
+                                <label>Amount (USD)</label>
+                                <input type="number" id="form-amount" min="1" step="0.01" value="250.00" required>
+                            </div>
+                            <div class="form-group col-half">
+                                <label>Category</label>
+                                <select id="form-category">
+                                    <option value="Grocery Store">Grocery Store</option>
+                                    <option value="Restaurant / Dining">Restaurant / Dining</option>
+                                    <option value="Gas Station">Gas Station</option>
+                                    <option value="Apparel / Fashion">Apparel / Fashion</option>
+                                    <option value="Electronics Store">Electronics Store</option>
+                                    <option value="Travel Agency / Flights">Travel Agency / Flights</option>
+                                    <option value="Digital Wallet Transfer">Digital Wallet Transfer</option>
+                                </select>
+                            </div>
+                            <div class="form-group col-half">
+                                <label>Billing Country</label>
+                                <select id="form-card-country" class="country-sync">
+                                    <option value="US">US (United States)</option>
+                                    <option value="GB">GB (United Kingdom)</option>
+                                    <option value="DE">DE (Germany)</option>
+                                    <option value="FR">FR (France)</option>
+                                    <option value="IN">IN (India)</option>
+                                    <option value="BR">BR (Brazil)</option>
+                                    <option value="CA">CA (Canada)</option>
+                                    <option value="RU">RU (Russia)</option>
+                                    <option value="CN">CN (China)</option>
+                                </select>
+                            </div>
+                            <div class="form-group col-half">
+                                <label>IP Address Country</label>
+                                <select id="form-ip-country" class="country-sync">
+                                    <option value="US">US (United States)</option>
+                                    <option value="GB">GB (United Kingdom)</option>
+                                    <option value="DE">DE (Germany)</option>
+                                    <option value="FR">FR (France)</option>
+                                    <option value="IN">IN (India)</option>
+                                    <option value="BR">BR (Brazil)</option>
+                                    <option value="CA">CA (Canada)</option>
+                                    <option value="RU">RU (Russia)</option>
+                                    <option value="CN">CN (China)</option>
+                                </select>
+                            </div>
+                            <div class="form-group col-half">
+                                <label>Transaction Velocity</label>
+                                <input type="number" id="form-velocity" min="1" max="15" value="1">
+                            </div>
+                            <div class="form-group col-half">
+                                <label>Device Type</label>
+                                <select id="form-device">
+                                    <option value="Desktop (Chrome/Windows)">Desktop (Chrome/Windows)</option>
+                                    <option value="Mobile App (iOS)">Mobile App (iOS)</option>
+                                    <option value="Mobile Safari (Android)">Mobile Safari (Android)</option>
+                                    <option value="Tablet Browser">Tablet Browser</option>
+                                    <option value="Unknown / Tor Network Proxy">Unknown / Tor Network Proxy</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn primary-btn col-full"><i class="lucide-credit-card"></i> Process Payment</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Middle Panel: Live Transaction Stream -->
+            <div class="workspace-column middle-panel">
+                <div class="card live-stream-card glassmorphic">
+                    <div class="live-stream-header">
+                        <h3 class="panel-title"><i class="lucide-list-collapse"></i> Transaction Auditor Feed</h3>
+                        <button id="btn-clear-feed" class="ghost-btn" title="Reset History and Stats"><i class="lucide-trash-2"></i> Reset</button>
+                    </div>
+                    <div class="stream-legend">
+                        <span class="legend-item"><span class="bullet approved"></span> Approved</span>
+                        <span class="legend-item"><span class="bullet review"></span> Review</span>
+                        <span class="legend-item"><span class="bullet blocked"></span> Blocked</span>
+                    </div>
+                    <div class="stream-container" id="stream-container">
+                        <!-- Simulated items will be appended here dynamically -->
+                        <div class="stream-placeholder">
+                            <i class="lucide-activity animate-pulse"></i>
+                            <p>Simulating audit logs... Toggle the simulator or execute manual checkouts to generate logs.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel: Rules Configuration & Charts -->
+            <div class="workspace-column right-panel">
+                <!-- Hybrid Engine Overrides -->
+                <div class="control-card glassmorphic">
+                    <h3 class="panel-title"><i class="lucide-shield-check"></i> Hybrid Rules Engine Overrides</h3>
+                    <div class="rules-list">
+                        <div class="rule-item">
+                            <div class="rule-main">
+                                <span class="rule-label">Block transactions above threshold</span>
+                                <input type="number" id="rule-amount-val" value="5000" class="rule-inline-input">
+                            </div>
+                            <label class="switch switch-sm">
+                                <input type="checkbox" id="rule-amount-active" checked>
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+
+                        <div class="rule-item">
+                            <div class="rule-main">
+                                <span class="rule-label">Block card billing/IP location mismatch</span>
+                            </div>
+                            <label class="switch switch-sm">
+                                <input type="checkbox" id="rule-mismatch-active">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+
+                        <div class="rule-item">
+                            <div class="rule-main">
+                                <span class="rule-label">Block card velocity &ge;</span>
+                                <input type="number" id="rule-velocity-val" value="4" min="2" max="10" class="rule-inline-input">
+                            </div>
+                            <label class="switch switch-sm">
+                                <input type="checkbox" id="rule-velocity-active" checked>
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+
+                        <div class="rule-item">
+                            <div class="rule-main">
+                                <span class="rule-label">Block Tor Proxy network devices</span>
+                            </div>
+                            <label class="switch switch-sm">
+                                <input type="checkbox" id="rule-device-active">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+
+                        <div class="rule-item divider-top">
+                            <div class="rule-main">
+                                <span class="rule-label text-gradient">ML Model Block Threshold (%)</span>
+                                <input type="number" id="rule-ml-val" value="75" min="10" max="95" class="rule-inline-input highlight-input">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Card -->
+                <div class="control-card glassmorphic chart-card">
+                    <h3 class="panel-title"><i class="lucide-pie-chart"></i> Live Distribution Overview</h3>
+                    <div class="chart-container">
+                        <canvas id="distributionChart"></canvas>
+                    </div>
+                    <div class="chart-sub-container divider-top">
+                        <h4 class="chart-subtitle">Audit Decision Stats</h4>
+                        <div class="mini-stats-grid">
+                            <div class="mini-stat">
+                                <span id="stat-count-approved">0</span>
+                                <label>Approved</label>
+                            </div>
+                            <div class="mini-stat">
+                                <span id="stat-count-review" class="text-orange">0</span>
+                                <label>Review</label>
+                            </div>
+                            <div class="mini-stat">
+                                <span id="stat-count-blocked" class="text-red">0</span>
+                                <label>Blocked</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Right Drawer: Detail and Explanations Modal -->
+    <div class="drawer-overlay" id="drawer-overlay"></div>
+    <div class="detail-drawer glassmorphic" id="detail-drawer">
+        <div class="drawer-header">
+            <h3><i class="lucide-scan-search text-gradient"></i> Transaction Deep Dive Auditor</h3>
+            <button id="btn-close-drawer" class="close-btn"><i class="lucide-x"></i></button>
+        </div>
+        <div class="drawer-content" id="drawer-content-area">
+            <!-- Dynamically populated drawer details -->
+            <div class="audit-summary-header">
+                <div class="audit-status-badge" id="audit-detail-badge">BLOCKED</div>
+                <div class="audit-score-container">
+                    <span class="audit-score-val" id="audit-detail-score">88.5%</span>
+                    <label>Fraud Risk Score</label>
+                </div>
+            </div>
+            
+            <div class="audit-section">
+                <h4>Decision Summary</h4>
+                <p id="audit-detail-decision" class="decision-reason-box">Risk score exceeds the machine learning engine auto-block threshold.</p>
+            </div>
+
+            <div class="audit-section">
+                <h4>Local Risk Drivers (XAI Importance Weights)</h4>
+                <p class="section-desc">Approximation of SHAP metrics explaining what metrics drove the ML decision.</p>
+                <div class="importance-chart-container">
+                    <canvas id="importanceChart"></canvas>
+                </div>
+            </div>
+
+            <div class="audit-section">
+                <h4>Transaction Diagnostics</h4>
+                <ul class="bullet-explanations" id="audit-detail-explanations">
+                    <li>High transaction amount ($2,500.00).</li>
+                    <li>Transaction occurred during high-risk hours (3:30 AM).</li>
+                </ul>
+            </div>
+
+            <div class="audit-section divider-top">
+                <h4>Cardholder Profile Data</h4>
+                <div class="profile-grid">
+                    <div class="profile-item"><label>Cardholder Name</label><span id="profile-name">Sarah Jenkins</span></div>
+                    <div class="profile-item"><label>Masked Card</label><span id="profile-card">4242 **** **** 4242</span></div>
+                    <div class="profile-item"><label>Card Network</label><span id="profile-network">Mastercard</span></div>
+                    <div class="profile-item"><label>Card Country</label><span id="profile-card-country">US</span></div>
+                    <div class="profile-item"><label>IP Country</label><span id="profile-ip-country">RU</span></div>
+                    <div class="profile-item"><label>Category</label><span id="profile-category">Electronics Store</span></div>
+                    <div class="profile-item"><label>Device</label><span id="profile-device">Unknown / Tor Proxy</span></div>
+                    <div class="profile-item"><label>Recent Velocity</label><span id="profile-velocity">5 txs in 15 min</span></div>
+                    <div class="profile-item"><label>Card Fraud Rate</label><span id="profile-historical">14.2% historical</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lucide init -->
+    <script>
+        lucide.createIcons();
+    </script>
+    <!-- Main scripts -->
+    <script src="app.js"></script>
+</body>
+</html>
