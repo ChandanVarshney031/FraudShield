@@ -14,13 +14,13 @@ from simulator import TransactionSimulator
 app = FastAPI(title="Real-Time Fraud Detection Engine", version="1.0.0")
 
 # Enable CORS for frontend hosting
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=False,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=["*"],
+#     allow_credentials=False,
+#     allow_methods=["*"],
+#     allow_headers=["*"],
+# )
 
 # Initialize models and simulator
 model_engine = FraudModelEngine()
