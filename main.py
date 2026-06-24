@@ -14,13 +14,32 @@ from simulator import TransactionSimulator
 app = FastAPI(title="Real-Time Fraud Detection Engine", version="1.0.0")
 
 # Enable CORS for frontend hosting
-# app.add_middleware(
-#     CORSMiddleware,
-#     allow_origins=["*"],
-#     allow_credentials=False,
-#     allow_methods=["*"],
-#     allow_headers=["*"],
-# )
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+@app.middleware("http")
+async def de_duplicate_cors_headers(request: Request, call_next):
+    response = await call_next(request)
+    
+    cors_headers = {
+        "access-control-allow-origin": "*",
+        "access-control-allow-methods": "*",
+        "access-control-allow-headers": "*",
+    }
+    
+    for header, value in cors_headers.items():
+        if header in response.headers:
+            # Delete all duplicate occurrences of the header
+            del response.headers[header]
+            # Set it exactly once
+            response.headers[header] = value
+            
+    return response
 
 # Initialize models and simulator
 model_engine = FraudModelEngine()
