@@ -19,15 +19,18 @@ let distributionChart = null;
 let importanceChart = null;
 
 // API Base Endpoints
+const IS_GITHUB_PAGES = window.location.hostname.includes('github.io');
+const API_BASE = IS_GITHUB_PAGES ? 'https://fraudshield-dwal.onrender.com' : '';
+
 const API = {
-    rules: '/api/rules',
-    simulatorConfig: '/api/simulator/config',
-    transactions: '/api/transactions',
-    metrics: '/api/metrics',
-    simulateNext: '/api/simulate/next',
-    predict: '/api/predict',
-    retrain: '/api/retrain',
-    reset: '/api/metrics/reset'
+    rules: API_BASE + '/api/rules',
+    simulatorConfig: API_BASE + '/api/simulator/config',
+    transactions: API_BASE + '/api/transactions',
+    metrics: API_BASE + '/api/metrics',
+    simulateNext: API_BASE + '/api/simulate/next',
+    predict: API_BASE + '/api/predict',
+    retrain: API_BASE + '/api/retrain',
+    reset: API_BASE + '/api/metrics/reset'
 };
 
 // DOM Elements

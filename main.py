@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
@@ -11,6 +12,15 @@ from model_engine import FraudModelEngine
 from simulator import TransactionSimulator
 
 app = FastAPI(title="Real-Time Fraud Detection Engine", version="1.0.0")
+
+# Enable CORS for frontend hosting
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Initialize models and simulator
 model_engine = FraudModelEngine()
