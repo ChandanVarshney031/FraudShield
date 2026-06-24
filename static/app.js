@@ -425,6 +425,15 @@ async function triggerSingleSim(forceFraud) {
 async function handleManualCheckout(e) {
     e.preventDefault();
     
+    // Set button loading state to guide user during cold starts
+    const submitBtn = elements.checkoutForm.querySelector('button[type="submit"]');
+    const originalBtnHTML = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `<i class="lucide-loader animate-spin"></i> Processing...`;
+    if (window.lucide) {
+        window.lucide.createIcons();
+    }
+    
     const billing = elements.formCardCountry.value;
     const ip = elements.formIpCountry.value;
     const amount = parseFloat(elements.formAmount.value);
@@ -475,6 +484,10 @@ async function handleManualCheckout(e) {
             body: JSON.stringify(txPayload)
         });
         
+        if (!response.ok) {
+            throw new Error(`Server returned status ${response.status}`);
+        }
+        
         const data = await response.json();
         
         appState.transactions.unshift(data);
@@ -487,6 +500,14 @@ async function handleManualCheckout(e) {
         openTransactionDeepDive(data);
     } catch (err) {
         console.error("Error submitting manual prediction:", err);
+        alert("Failed to process payment. The server might be booting up or encountering CORS issues. Please try again in a few seconds.");
+    } finally {
+        // Restore button state
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalBtnHTML;
+        if (window.lucide) {
+            window.lucide.createIcons();
+        }
     }
 }
 
