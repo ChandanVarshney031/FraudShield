@@ -20,7 +20,14 @@ let importanceChart = null;
 
 // API Base Endpoints
 const IS_GITHUB_PAGES = window.location.hostname.includes('github.io');
-const API_BASE = IS_GITHUB_PAGES ? 'https://fraudshield-dwal.onrender.com' : '';
+const IS_LOCAL_FILE = window.location.protocol === 'file:';
+const IS_DEV_SERVER = window.location.port && window.location.port !== '8000';
+
+const API_BASE = IS_GITHUB_PAGES 
+    ? 'https://fraudshield-dwal.onrender.com' 
+    : (IS_LOCAL_FILE || IS_DEV_SERVER) 
+        ? 'http://127.0.0.1:8000' 
+        : '';
 
 const API = {
     rules: API_BASE + '/api/rules',
