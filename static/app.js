@@ -121,15 +121,37 @@ const elements = {
 // Initial setup on window load
 window.addEventListener('DOMContentLoaded', async () => {
     // 1. Initialize empty charts
-    initCharts();
+    try {
+        initCharts();
+    } catch (err) {
+        console.error("Failed to initialize charts (Chart.js might be missing or blocked):", err);
+    }
     
     // 2. Fetch configurations and initial state
-    await fetchRules();
-    await fetchSimulatorConfig();
-    await loadInitialData();
+    try {
+        await fetchRules();
+    } catch (err) {
+        console.error("Failed to fetch rules:", err);
+    }
+    
+    try {
+        await fetchSimulatorConfig();
+    } catch (err) {
+        console.error("Failed to fetch simulator config:", err);
+    }
+    
+    try {
+        await loadInitialData();
+    } catch (err) {
+        console.error("Failed to load initial data:", err);
+    }
     
     // 3. Setup event listeners
-    setupEventListeners();
+    try {
+        setupEventListeners();
+    } catch (err) {
+        console.error("Failed to setup event listeners:", err);
+    }
 });
 
 // Init Charts using Chart.js
@@ -584,12 +606,14 @@ async function refreshMetrics() {
         elements.statCountBlocked.innerText = data.true_positives + data.false_positives;
         
         // Update Chart distribution data
-        distributionChart.data.datasets[0].data = [
-            data.true_negatives + data.false_negatives - data.suspicious_reviews,
-            data.suspicious_reviews,
-            data.true_positives + data.false_positives
-        ];
-        distributionChart.update();
+        if (distributionChart) {
+            distributionChart.data.datasets[0].data = [
+                data.true_negatives + data.false_negatives - data.suspicious_reviews,
+                data.suspicious_reviews,
+                data.true_positives + data.false_positives
+            ];
+            distributionChart.update();
+        }
         
     } catch (err) {
         console.error("Error refreshing dashboard metrics:", err);
@@ -688,17 +712,19 @@ function openTransactionDeepDive(item) {
     // Render drivers chart inside drawer
     // Drivers mapping: amount, time_of_day, card_holder_age, transaction_velocity, location_mismatch, device_risk, category_risk, historical_fraud_rate
     const drivers = ev.risk_drivers;
-    importanceChart.data.datasets[0].data = [
-        drivers.amount || 0,
-        drivers.time_of_day || 0,
-        drivers.card_holder_age || 0,
-        drivers.transaction_velocity || 0,
-        drivers.location_mismatch || 0,
-        drivers.device_risk || 0,
-        drivers.category_risk || 0,
-        drivers.historical_fraud_rate || 0
-    ];
-    importanceChart.update();
+    if (importanceChart) {
+        importanceChart.data.datasets[0].data = [
+            drivers.amount || 0,
+            drivers.time_of_day || 0,
+            drivers.card_holder_age || 0,
+            drivers.transaction_velocity || 0,
+            drivers.location_mismatch || 0,
+            drivers.device_risk || 0,
+            drivers.category_risk || 0,
+            drivers.historical_fraud_rate || 0
+        ];
+        importanceChart.update();
+    }
     
     // Open drawer classes
     elements.drawerOverlay.classList.add('active');
